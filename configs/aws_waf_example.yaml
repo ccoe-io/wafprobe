@@ -1,0 +1,78 @@
+# AWS WAF Testing Configuration Example
+# 
+# This configuration is specifically designed for testing AWS WAF protection
+
+# Global execution options
+global:
+  workers: 10              # Number of parallel workers to use for testing
+  generate_report: true    # Whether to generate a report
+  verbose: false           # Verbose output (detailed logs)
+  debug: false             # Debug output (very detailed logs)
+  timeout: 30              # Global timeout in seconds
+  output_dir: "./reports/aws_waf_test"  # Directory to store reports
+  html_report: true        # Generate HTML report
+  recommendations: false    # [WIP] Generate recommendations file 
+
+# Test targets
+targets:
+  - url: "https://example.com/"
+    name: "Example API"
+    description: "Example API protected by AWS WAF"
+    waf_type: "AWS"        # Type of WAF (AWS in this case)
+    
+    # Rules configuration for this target
+    rules:
+      include: ["aws_rules"]  # Use AWS rules module for this target
+      
+      # Categories to test (comment out to test all categories)
+      # categories: 
+      #   # - "sql"             # SQL injection rules
+      #   # - "xss"             # Cross-site scripting rules
+      #   - "admin"           # Admin protection rules
+      
+      # Optional: specific rules to test by name
+      # rule_names:           
+      #  - SQLi_BODY
+      #  - CrossSiteScripting_BODY
+      #  - AdminProtection_URIPATH
+    
+      # Maximum number of test vectors per rule (0 = all)
+      max_vectors: 0        # Limit to 10 vectors per rule for faster testing
+    
+    # Request parameters
+    request:
+      delay: 0.5             # Delay between requests in seconds
+      timeout: 10            # Request timeout in seconds
+      headers:
+        Content-Type: "application/json"
+        Accept: "application/json"
+        User-Agent: "WAF-Tester/1.0"
+      cookies: {}
+      auth:
+        type: "bearer"        # Type of authentication (basic, bearer, etc.)
+        token: "${API_TOKEN}" # Token from environment variable
+      
+      # Query parameter format for different test injection points
+      query_format:
+        normal: "query={}"   # Format for normal query parameter
+        json: "json={}"      # Format for JSON query parameter
+      
+      # Body format for different test injection points
+      body_format:
+        normal: "{{ \"query\": \"{}\" }}"      # String in JSON
+        raw: "{}"                              # Raw payload
+        json_value: "{{ \"filter\": {} }}"     # JSON value in JSON
+    
+    # [optional] Response detection configuration
+    detection:
+      positive_status_codes: [200, 201, 202, 204, 301, 302, 401]  # Success status codes
+      negative_status_codes: [400, 403, 422]       # Blocked status codes
+      block_patterns:                              # Patterns indicating blocking
+        - "Access denied"
+        - "Request blocked"
+        - "Invalid request"
+        - "403 Forbidden"
+      bypass_patterns:                             # Patterns indicating bypass
+        - "\"data\":"
+        - "\"items\":"
+        - "\"results\":"

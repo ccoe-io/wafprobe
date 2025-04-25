@@ -1,0 +1,184 @@
+# WAF Testing Configuration
+# 
+# This configuration file defines the targets, rules, and parameters 
+# for WAF bypass testing.
+
+# Global execution options
+global:
+  workers: 5                  # Number of concurrent worker threads for testing
+  generate_report: true       # Generate report of findings
+  verbose: false              # Enable verbose output
+  debug: false                # Enable debug mode with more detailed logging
+  timeout: 30                 # Global timeout in seconds
+  report_dir: "./reports"     # Directory to save reports
+
+# Target URLs to test
+targets:
+  - url: https://example.com/api
+    name: Example API
+    description: Example API endpoint for WAF testing
+    
+    # Waf Type (aws, azure, gcp, cloudflare, etc)
+    waf_type: aws
+    
+    # Rules configuration for this target
+    rules:
+      include:
+        - aws_rules           # Load rules from aws_rules.py module
+        - graphql_rules       # Load rules from graphql_rules.py module
+        # - kubernetes_rules  # Load rules from kubernetes_rules.py module
+        # - documentdb_rules  # Load rules from documentdb_rules.py module
+      
+      # Specific rule names to include (empty = include all from the modules listed above)
+      rule_names:
+        - CrossSiteScripting_BODY
+        - SQLi_BODY
+        - GraphQL_Introspection_BODY
+      
+      # Categories to include (empty = include all categories)
+      categories:
+        - xss
+        - sql
+        - graphql
+      
+      # Maximum number of test vectors per rule (0 = use all vectors)
+      max_vectors: 10
+    
+    # Request parameters
+    request:
+      # Delay between requests in seconds
+      delay: 0.2
+      
+      # Request timeout in seconds
+      timeout: 15
+      
+      # Custom headers to send with each request
+      headers:
+        User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        Content-Type: "application/json"
+        X-Custom-Header: "WAF-Test"
+      
+      # Authentication if needed
+      auth:
+        type: "bearer"        # Type of authentication (basic, bearer, etc.)
+        token: "${API_TOKEN}" # Token for bearer auth
+      
+      # Query parameter format for different test injection points
+      query_format:
+        normal: "query={}"    # Format for normal query parameter
+        json: "json={}"       # Format for JSON query parameter
+      
+      # Body format for different test injection points
+      body_format:
+        normal: "{{ \"query\": \"{}\" }}"     # String in JSON
+        raw: "{}"                             # Raw payload
+        json_value: "{{ \"filter\": {} }}"    # JSON value in JSON
+    
+    # Response detection configuration
+    detection:
+      positive_status_codes: [200, 201, 202, 204]  # Success status codes
+      negative_status_codes: [400, 403, 422]       # Blocked status codes
+      block_patterns:                              # Patterns indicating blocking
+        - "Access denied"
+        - "Request blocked"
+        - "Invalid request"
+      bypass_patterns:                             # Patterns indicating bypass
+        - "\"data\":"
+        - "\"items\":"
+        - "\"results\":"
+
+  - url: https://example.com/graphql
+    name: GraphQL API
+    description: GraphQL API endpoint for testing
+    waf_type: aws
+    
+    rules:
+      include:
+        - graphql_rules      # Focus on GraphQL-specific tests for this endpoint
+      
+      # Test all GraphQL rules for this endpoint
+      categories:
+        - graphql
+    
+    request:
+      delay: 0.1
+      timeout: 10
+      headers:
+        Content-Type: "application/json"
+      
+      # Body format specifically for GraphQL
+      body_format:
+        normal: "{ \"query\": \"{}\" }"
+        raw: "{}"
+        json_value: "{ \"variables\": {} }"
+    
+    detection:
+      positive_status_codes: [200]
+      negative_status_codes: [400, 403, 422]
+      block_patterns:
+        - "errors"
+        - "Access denied"
+      bypass_patterns:
+        - "\"data\":"
+
+  - url: https://example.com/k8s-api
+    name: Kubernetes API
+    description: Kubernetes API proxy for testing
+    waf_type: aws
+    
+    rules:
+      include:
+        - kubernetes_rules   # Focus on Kubernetes-specific tests
+      
+      # Test only specific Kubernetes rule categories
+      categories:
+        - k8s
+    
+    request:
+      delay: 0.5             # Slower rate for K8s API tests
+      timeout: 30            # Longer timeout for K8s operations
+      headers:
+        Authorization: "Bearer ${K8S_TOKEN}" # Environment variable substitution
+    
+    detection:
+      positive_status_codes: [200, 201, 202]
+      negative_status_codes: [400, 401, 403, 422]
+      block_patterns:
+        - "Forbidden"
+        - "Unauthorized"
+      bypass_patterns:
+        - "\"kind\":" 
+        - "\"apiVersion\":"
+
+  - url: https://example.com/document-api
+    name: Document API
+    description: Document-oriented database API endpoint
+    waf_type: aws
+    
+    rules:
+      include:
+        - documentdb_rules  # Focus on DocumentDB/MongoDB-specific tests
+      
+      # Test only specific DocumentDB/MongoDB rule categories
+      categories:
+        - nosql
+    
+    request:
+      delay: 0.2
+      timeout: 20
+      headers:
+        Content-Type: "application/json"
+      
+      body_format:
+        normal: "{ \"query\": \"{}\" }"
+        json_value: "{ \"filter\": {} }"
+    
+    detection:
+      positive_status_codes: [200]
+      negative_status_codes: [400, 403, 422]
+      block_patterns:
+        - "Access denied"
+        - "Invalid request"
+      bypass_patterns:
+        - "\"documents\":"
+        - "\"results\":" 

@@ -1,0 +1,175 @@
+# WAF Testing Framework - Available Rules
+
+This document provides a comprehensive list of all available test rules in the WAF Testing Framework.
+Use the `--list-rules` command to get the most up-to-date list directly from the tool.
+
+## Rule Modules
+
+The framework includes multiple rule modules for different technologies:
+
+- `aws_rules`: AWS WAF rules (including the AWSManagedRulesCommonRuleSet)
+- `graphql_rules`: GraphQL-specific vulnerabilities
+- `kubernetes_rules`: Kubernetes API server vulnerabilities
+- `documentdb_rules`: DocumentDB/MongoDB-specific vulnerabilities
+
+## AWS WAF Rules
+
+The AWS WAF module defines rules specific to AWS WAF testing, particularly
+focusing on the AWSManagedRulesCommonRuleSet. (31 rules)
+
+### Core Rules
+
+  - NoUserAgent_HEADER: Blocks requests that don't have a user-agent header
+    Components: header
+    Test vectors: 8
+
+  - UserAgent_BadBots_HEADER: Blocks requests with user-agents associated with bots or crawlers
+    Components: header
+    Test vectors: 15
+
+  - SizeRestrictions_QUERYSTRING: Inspects query strings that are larger than a certain size
+    Components: querystring
+    Test vectors: 5
+
+  - SizeRestrictions_Cookie_HEADER: Inspects cookies that are larger than a certain size
+    Components: cookie
+    Test vectors: 4
+
+  - SizeRestrictions_BODY: Inspects request bodies that are larger than a certain size
+    Components: body
+    Test vectors: 4
+
+  - SizeRestrictions_URIPATH: Inspects URI paths that are larger than a certain size
+    Components: uri
+    Test vectors: 3
+
+### Server-Side Request Forgery (SSRF) Rules
+
+  - EC2MetaDataSSRF_BODY: Blocks attempts to access the EC2 metadata service via request body
+    Components: body
+    Test vectors: 80
+
+  - EC2MetaDataSSRF_COOKIE: Blocks attempts to access the EC2 metadata service via cookies
+    Components: cookie
+    Test vectors: 80
+
+  - EC2MetaDataSSRF_URIPATH: Blocks attempts to access the EC2 metadata service via URI path
+    Components: uri
+    Test vectors: 80
+
+  - EC2MetaDataSSRF_QUERYARGUMENTS: Blocks attempts to access the EC2 metadata service via query string
+    Components: querystring
+    Test vectors: 80
+
+### File Inclusion Rules
+
+  - GenericLFI_QUERYARGUMENTS: Blocks requests with local file inclusion patterns in query arguments
+    Components: querystring
+    Test vectors: 217
+
+  - GenericLFI_URIPATH: Blocks requests with local file inclusion patterns in URI path
+    Components: uri
+    Test vectors: 217
+
+  - GenericLFI_BODY: Blocks requests with local file inclusion patterns in request body
+    Components: body
+    Test vectors: 217
+
+  - RestrictedExtensions_URIPATH: Blocks requests for files with restricted extensions in URI path
+    Components: uri
+    Test vectors: 272
+
+  - RestrictedExtensions_QUERYARGUMENTS: Blocks requests for files with restricted extensions in query arguments
+    Components: querystring
+    Test vectors: 272
+
+  - GenericRFI_QUERYARGUMENTS: Blocks requests with remote file inclusion patterns in query arguments
+    Components: querystring
+    Test vectors: 144
+
+  - GenericRFI_BODY: Blocks requests with remote file inclusion patterns in request body
+    Components: body
+    Test vectors: 144
+
+  - GenericRFI_URIPATH: Blocks requests with remote file inclusion patterns in URI path
+    Components: uri
+    Test vectors: 144
+
+### Cross-Site Scripting (XSS) Rules
+
+  - CrossSiteScripting_COOKIE: Blocks requests with cross-site scripting patterns in cookies
+    Components: cookie
+    Test vectors: 211
+
+  - CrossSiteScripting_QUERYARGUMENTS: Blocks requests with cross-site scripting patterns in query arguments
+    Components: querystring
+    Test vectors: 211
+
+  - CrossSiteScripting_BODY: Blocks requests with cross-site scripting patterns in request body
+    Components: body
+    Test vectors: 211
+
+  - CrossSiteScripting_URIPATH: Blocks requests with cross-site scripting patterns in URI path
+    Components: uri
+    Test vectors: 211
+
+### Miscellaneous Protection Rules
+
+  - AdminProtection_URIPATH: Blocks access to admin pages and interfaces
+    Components: uri
+    Test vectors: 52
+
+  - HostHeaderInjection_HEADER: Blocks requests with malicious Host headers
+    Components: header
+    Test vectors: 11
+
+  - Log4JRCE_HEADER: Blocks Log4j/Log4Shell exploitation attempts in headers
+    Components: header
+    Test vectors: 17
+
+  - Log4JRCE_QUERYSTRING: Blocks Log4j/Log4Shell exploitation attempts in query string
+    Components: querystring
+    Test vectors: 17
+
+  - Log4JRCE_BODY: Blocks Log4j/Log4Shell exploitation attempts in request body
+    Components: body
+    Test vectors: 17
+
+### SQL Injection Rules
+
+  - SQLi_QUERYARGUMENTS: Blocks SQL injection attempts in query arguments
+    Components: querystring
+    Test vectors: 138
+
+  - SQLi_BODY: Blocks SQL injection attempts in request body
+    Components: body
+    Test vectors: 138
+
+  - SQLi_COOKIE: Blocks SQL injection attempts in cookies
+    Components: cookie
+    Test vectors: 138
+
+  - AnonymizedIPList_HEADER: Blocks requests from anonymizing services (TOR, VPN, proxies)
+    Components: header
+    Test vectors: 8
+
+## GraphQL Rules
+
+Rules for testing GraphQL-specific vulnerabilities. Run `--list-rules --module graphql_rules` for details.
+
+## Kubernetes Rules
+
+Rules for testing Kubernetes API security. Run `--list-rules --module kubernetes_rules` for details.
+
+## DocumentDB/MongoDB Rules
+
+Rules for testing NoSQL injection and other database vulnerabilities. Run `--list-rules --module documentdb_rules` for details.
+
+---
+
+NOTE: This file is maintained manually and may not reflect the most recent updates.
+For the most current list of rules, use the command:
+```
+python -m runners.multi_waf_tester --list-rules
+```
+
